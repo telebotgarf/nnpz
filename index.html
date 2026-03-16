@@ -11,6 +11,7 @@
             --tg-text: #222222;
             --tg-hint: #999999;
             --tg-section: #ffffff;
+            --tg-accent: #2481cc;
         }
         body {
             background-color: var(--tg-bg);
@@ -40,22 +41,32 @@
         h1, h4, h5 { color: var(--tg-text) !important; }
         .btn-custom { font-size: 1.1rem; padding: 12px; }
 
-        /* Исправление модального окна для тёмной темы */
+        /* Полная адаптация модального окна под любую тему Telegram */
         .modal-content {
             background-color: var(--tg-section, #1e1e1e) !important;
             color: var(--tg-text, #e0e0e0) !important;
             border: 1px solid var(--tg-hint, #444) !important;
         }
-        .modal-header,
+        .modal-header {
+            background-color: var(--tg-section, #1e1e1e) !important;
+            border-bottom: 1px solid var(--tg-hint, #444) !important;
+        }
         .modal-footer {
             background-color: var(--tg-section, #1e1e1e) !important;
-            border-color: var(--tg-hint, #444) !important;
+            border-top: 1px solid var(--tg-hint, #444) !important;
         }
         .modal-title {
             color: var(--tg-text, #ffffff) !important;
         }
+        .modal-body {
+            color: var(--tg-text, #e0e0e0) !important;
+        }
         .btn-close {
-            filter: invert(1) grayscale(100%) brightness(200%);
+            filter: invert(1) grayscale(100%) brightness(200%) !important;
+        }
+        .btn-secondary {
+            background-color: var(--tg-accent, #2481cc) !important;
+            border-color: var(--tg-accent, #2481cc) !important;
         }
     </style>
 </head>
@@ -91,10 +102,10 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    1️⃣ Только значения а/б/с/е/ш/н + 1/3/5<br>
-                    2️⃣ Заглавные буквы автоматически преобразуются в строчные<br>
-                    3️⃣ Вводите через пробел<br>
-                    4️⃣ Результат отправляется в чат кнопкой снизу (или копируется при ошибке)
+                    1️⃣ Только значения из букв (а, б, с, е, ш, н) и цифр (1, 3, 5).<br>
+                    2️⃣ Заглавные буквы автоматически становятся строчными.<br>
+                    3️⃣ Вводите значения через пробел, например: а1 б3 с5 е1 ш5 н3.<br>
+                    4️⃣ После расчёта нажмите «Отправить результат в чат» — данные должны появиться в переписке с ботом.
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
@@ -109,6 +120,7 @@
         const tg = window.Telegram?.WebApp;
         let currentCategory = '';
         let currentResultText = '';
+        let sendSuccessShown = false;
 
         if (tg) {
             tg.ready();
@@ -119,6 +131,7 @@
             document.documentElement.style.setProperty('--tg-text', theme.text_color || '#222222');
             document.documentElement.style.setProperty('--tg-hint', theme.hint_color || '#999999');
             document.documentElement.style.setProperty('--tg-section', theme.section_bg_color || '#ffffff');
+            document.documentElement.style.setProperty('--tg-accent', theme.button_color || '#2481cc');
 
             document.body.style.backgroundColor = theme.bg_color || '#f8f9fa';
             document.body.style.color = theme.text_color || '#222222';
@@ -135,16 +148,26 @@
             tg.SecondaryButton.setText('Отправить результат в чат');
             tg.SecondaryButton.hide();
             tg.SecondaryButton.onClick(() => {
-                if (currentResultText) {
-                    tg.sendData(currentResultText);
-                    // tg.close();               // ← раскомментируй, если хочешь закрывать приложение сразу после отправки
-                    tg.showPopup({
-                        title: 'Отправлено!',
-                        message: 'Результат отправлен в чат с ботом.',
-                        buttons: [{type: 'ok'}]
-                    });
-                }
+                if (!currentResultText) return;
+
+                sendSuccessShown = false;
+                tg.sendData(currentResultText);
+
+                // Даём Telegram 1.5 секунды на обработку sendData и показ popup (если бот настроен)
+                setTimeout(() => {
+                    if (!sendSuccessShown) {
+                        tg.showPopup({
+                            title: 'Не удалось отправить автоматически',
+                            message: 'Попробуйте скопировать результат вручную.\n\nТекст уже в буфере обмена — вставьте в чат (долгое нажатие → Вставить).',
+                            buttons: [{type: 'ok'}]
+                        });
+                        navigator.clipboard.writeText(currentResultText).catch(() => {});
+                    }
+                }, 1500);
             });
+
+            // Если бот отправит ответ — можно отловить, но обычно не нужно
+            tg.onEvent('popup_closed', () => { sendSuccessShown = true; });
         }
 
         const validValues = ['а1','а3','а5','б1','б3','б5','с1','с3','с5','е1','е3','е5','ш1','ш3','ш5','н1','н3','н5'];
@@ -203,7 +226,7 @@
             if (tg) {
                 tg.SecondaryButton.show();
                 if (!localStorage.getItem('sendHintShown')) {
-                    tg.showAlert('Нажми «Отправить результат в чат» внизу — данные придут прямо в переписку с ботом.');
+                    tg.showAlert('Нажмите «Отправить результат в чат» — данные должны появиться в переписке с ботом.\nЕсли ничего не произошло — скопируйте текст вручную.');
                     localStorage.setItem('sendHintShown', 'true');
                 }
             }
