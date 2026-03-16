@@ -1,248 +1,289 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>НН / ПЗ Калькулятор</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        :root {
-            --tg-bg: #f8f9fa;
-            --tg-text: #222222;
-            --tg-hint: #999999;
-            --tg-section: #ffffff;
-            --tg-accent: #2481cc;
-        }
-        body {
-            background-color: var(--tg-bg);
-            color: var(--tg-text);
-            transition: all 0.3s;
-            min-height: 100vh;
-        }
-        .container { max-width: 540px; }
-        .result {
-            background: var(--tg-section);
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-            color: var(--tg-text);
-        }
-        .card {
-            background: var(--tg-section);
-            color: var(--tg-text);
-        }
-        .form-control {
-            background: var(--tg-bg);
-            color: var(--tg-text);
-            border-color: var(--tg-hint);
-        }
-        .form-control::placeholder { color: var(--tg-hint); }
-        .text-muted { color: var(--tg-hint) !important; }
-        h1, h4, h5 { color: var(--tg-text) !important; }
-        .btn-custom { font-size: 1.1rem; padding: 12px; }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>НН / ПЗ Калькулятор</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <style>
+    :root {
+      --tg-bg: #f8f9fa;
+      --tg-text: #212529;
+      --tg-hint: #6c757d;
+      --tg-section: #ffffff;
+      --tg-accent: #0d6efd;
+    }
 
-        /* Полная адаптация модального окна под любую тему Telegram */
-        .modal-content {
-            background-color: var(--tg-section, #1e1e1e) !important;
-            color: var(--tg-text, #e0e0e0) !important;
-            border: 1px solid var(--tg-hint, #444) !important;
-        }
-        .modal-header {
-            background-color: var(--tg-section, #1e1e1e) !important;
-            border-bottom: 1px solid var(--tg-hint, #444) !important;
-        }
-        .modal-footer {
-            background-color: var(--tg-section, #1e1e1e) !important;
-            border-top: 1px solid var(--tg-hint, #444) !important;
-        }
-        .modal-title {
-            color: var(--tg-text, #ffffff) !important;
-        }
-        .modal-body {
-            color: var(--tg-text, #e0e0e0) !important;
-        }
-        .btn-close {
-            filter: invert(1) grayscale(100%) brightness(200%) !important;
-        }
-        .btn-secondary {
-            background-color: var(--tg-accent, #2481cc) !important;
-            border-color: var(--tg-accent, #2481cc) !important;
-        }
-    </style>
+    body {
+      background-color: var(--tg-bg);
+      color: var(--tg-text);
+      transition: background-color 0.4s, color 0.4s;
+      min-height: 100vh;
+      padding-bottom: 80px; /* место под кнопки Telegram */
+    }
+
+    .container { max-width: 540px; }
+
+    .result {
+      background: var(--tg-section);
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+      color: var(--tg-text);
+    }
+
+    .card {
+      background: var(--tg-section);
+      color: var(--tg-text);
+      border: none;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    }
+
+    .form-control {
+      background: var(--tg-bg);
+      color: var(--tg-text);
+      border-color: var(--tg-hint);
+    }
+
+    .form-control:focus {
+      border-color: var(--tg-accent);
+      box-shadow: 0 0 0 0.25rem rgba(13,110,253,0.25);
+    }
+
+    .form-control::placeholder { color: var(--tg-hint); opacity: 0.7; }
+
+    .text-muted { color: var(--tg-hint) !important; }
+
+    h1, h4, h5 { color: var(--tg-text) !important; }
+
+    .btn-custom {
+      font-size: 1.1rem;
+      padding: 0.75rem 1.25rem;
+    }
+
+    /* Адаптация модального окна под тему Telegram */
+    .modal-content {
+      background-color: var(--tg-section, #1e1e1e) !important;
+      color: var(--tg-text, #e9ecef) !important;
+      border: 1px solid var(--tg-hint, #444) !important;
+      border-radius: 16px;
+    }
+
+    .modal-header, .modal-footer {
+      background-color: var(--tg-section, #1e1e1e) !important;
+      border-color: var(--tg-hint, #444) !important;
+    }
+
+    .modal-title {
+      color: var(--tg-text, #ffffff) !important;
+    }
+
+    .modal-body {
+      color: var(--tg-text, #e9ecef) !important;
+      line-height: 1.6;
+    }
+
+    .btn-close {
+      filter: invert(0.92) brightness(1.8) !important;
+    }
+
+    .btn-secondary {
+      background-color: var(--tg-accent, #0d6efd) !important;
+      border-color: var(--tg-accent, #0d6efd) !important;
+    }
+  </style>
 </head>
 <body>
-    <div class="container py-4">
-        <div class="text-center mb-4">
-            <h1 id="app-title" class="display-6">👋 НН / ПЗ Калькулятор</h1>
-            <p class="text-muted">Обработка значений Ненаходы и Перезаклады</p>
-        </div>
 
-        <div class="d-flex justify-content-center gap-2 mb-4 flex-wrap">
-            <button onclick="selectMode('НН')" class="btn btn-success btn-custom">✅НН✅</button>
-            <button onclick="selectMode('ПЗ')" class="btn btn-primary btn-custom">✅ПЗ✅</button>
-            <button onclick="showInfo()" class="btn btn-info btn-custom text-white">❓ИНФО❓</button>
-        </div>
+<div class="container py-4">
 
-        <div id="input-area" class="card p-4 mb-4" style="display: none;">
-            <h5 id="prompt-text" class="text-center"></h5>
-            <textarea id="values-input" class="form-control mb-3" rows="4" placeholder="а1 б5 с3 е1 ш5 н3 ..."></textarea>
-            <button onclick="processValues()" class="btn btn-lg btn-dark w-100">Обработать</button>
-            <button onclick="resetInput()" class="btn btn-outline-secondary w-100 mt-2">Очистить</button>
-        </div>
+  <div class="text-center mb-5">
+    <h1 id="app-title" class="display-5 fw-bold">НН / ПЗ Калькулятор</h1>
+    <p class="text-muted lead">Подсчёт значений Ненаходы и Перезаклады</p>
+  </div>
 
-        <div id="result" class="result mt-4"></div>
+  <div class="d-grid d-sm-flex justify-content-center gap-3 mb-4">
+    <button onclick="selectMode('НН')" class="btn btn-success btn-lg btn-custom">✅ НН ✅</button>
+    <button onclick="selectMode('ПЗ')" class="btn btn-primary btn-lg btn-custom">✅ ПЗ ✅</button>
+    <button onclick="showInfo()" class="btn btn-info btn-lg btn-custom text-white">❓ ИНФО ❓</button>
+  </div>
+
+  <div id="input-area" class="card p-4 mb-4 shadow-sm" style="display:none;">
+    <h5 id="prompt-text" class="text-center mb-3 fw-semibold"></h5>
+    <textarea id="values-input" class="form-control mb-3" rows="4" placeholder="а1 б5 с3 е1 ш5 н3 …" autofocus></textarea>
+    <div class="d-grid gap-2">
+      <button onclick="processValues()" class="btn btn-dark btn-lg">Обработать</button>
+      <button onclick="resetInput()" class="btn btn-outline-secondary">Очистить</button>
     </div>
+  </div>
 
-    <!-- Модальное окно ИНФО -->
-    <div class="modal fade" id="infoModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Информация</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    1️⃣ Только значения из букв (а, б, с, е, ш, н) и цифр (1, 3, 5).<br>
-                    2️⃣ Заглавные буквы автоматически становятся строчными.<br>
-                    3️⃣ Вводите значения через пробел, например: а1 б3 с5 е1 ш5 н3.<br>
-                    4️⃣ После расчёта нажмите «Отправить результат в чат» — данные должны появиться в переписке с ботом.
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
-                </div>
-            </div>
-        </div>
+  <div id="result" class="result mt-4" style="display:none;"></div>
+
+</div>
+
+<!-- Модальное окно ИНФО -->
+<div class="modal fade" id="infoModal" tabindex="-1" aria-labelledby="infoModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="infoModalLabel">Как пользоваться</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+      </div>
+      <div class="modal-body">
+        <ol class="mb-0">
+          <li>Допустимые значения: <code>а1 а3 а5 б1 б3 б5 с1 с3 с5 е1 е3 е5 ш1 ш3 ш5 н1 н3 н5</code></li>
+          <li>Заглавные буквы автоматически преобразуются в строчные</li>
+          <li>Значения вводятся через пробел</li>
+          <li>После расчёта нажмите кнопку «Скопировать результат» → вернитесь в чат и вставьте текст (долгое нажатие → Вставить)</li>
+        </ol>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Понятно</button>
+      </div>
     </div>
+  </div>
+</div>
 
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        const tg = window.Telegram?.WebApp;
-        let currentCategory = '';
-        let currentResultText = '';
-        let sendSuccessShown = false;
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+const tg = window.Telegram?.WebApp || null;
+let currentCategory = '';
+let currentResultText = '';
 
-        if (tg) {
-            tg.ready();
-            tg.expand();
+// ─── Telegram Mini App init ────────────────────────────────────────
+if (tg) {
+  tg.ready();
+  tg.expand();
 
-            const theme = tg.themeParams;
-            document.documentElement.style.setProperty('--tg-bg', theme.bg_color || '#f8f9fa');
-            document.documentElement.style.setProperty('--tg-text', theme.text_color || '#222222');
-            document.documentElement.style.setProperty('--tg-hint', theme.hint_color || '#999999');
-            document.documentElement.style.setProperty('--tg-section', theme.section_bg_color || '#ffffff');
-            document.documentElement.style.setProperty('--tg-accent', theme.button_color || '#2481cc');
+  const theme = tg.themeParams;
+  document.documentElement.style.setProperty('--tg-bg',      theme.bg_color       || '#f8f9fa');
+  document.documentElement.style.setProperty('--tg-text',     theme.text_color      || '#212529');
+  document.documentElement.style.setProperty('--tg-hint',     theme.hint_color      || '#6c757d');
+  document.documentElement.style.setProperty('--tg-section',  theme.section_bg_color|| '#ffffff');
+  document.documentElement.style.setProperty('--tg-accent',   theme.button_color    || '#0d6efd');
 
-            document.body.style.backgroundColor = theme.bg_color || '#f8f9fa';
-            document.body.style.color = theme.text_color || '#222222';
+  document.body.style.backgroundColor = theme.bg_color || '#f8f9fa';
+  document.body.style.color = theme.text_color || '#212529';
 
-            if (tg.initDataUnsafe?.user?.first_name) {
-                document.getElementById('app-title').textContent = 
-                    `👋 ${tg.initDataUnsafe.user.first_name}, НН / ПЗ Калькулятор`;
-            }
+  if (tg.initDataUnsafe?.user?.first_name) {
+    document.getElementById('app-title').textContent =
+      `Привет, ${tg.initDataUnsafe.user.first_name}!`;
+  }
 
-            tg.MainButton.setText('Закрыть приложение');
-            tg.MainButton.onClick(() => tg.close());
-            tg.MainButton.show();
+  // Главная кнопка — закрытие
+  tg.MainButton.setText('Закрыть');
+  tg.MainButton.onClick(() => tg.close());
+  tg.MainButton.show();
 
-            tg.SecondaryButton.setText('Отправить результат в чат');
-            tg.SecondaryButton.hide();
-            tg.SecondaryButton.onClick(() => {
-                if (!currentResultText) return;
+  // Вторая кнопка — копирование
+  tg.SecondaryButton.setText('Скопировать результат');
+  tg.SecondaryButton.hide();
+  tg.SecondaryButton.onClick(async () => {
+    if (!currentResultText) return;
 
-                sendSuccessShown = false;
-                tg.sendData(currentResultText);
+    try {
+      await navigator.clipboard.writeText(currentResultText);
+      tg.showPopup({
+        title: 'Скопировано!',
+        message: 'Результат в буфере обмена.\n\nВернитесь в чат и вставьте текст.',
+        buttons: [{type:'ok'}]
+      });
+    } catch (err) {
+      tg.showAlert('Не удалось скопировать автоматически.\nВыделите текст на экране вручную.');
+    }
+  });
+}
 
-                // Даём Telegram 1.5 секунды на обработку sendData и показ popup (если бот настроен)
-                setTimeout(() => {
-                    if (!sendSuccessShown) {
-                        tg.showPopup({
-                            title: 'Не удалось отправить автоматически',
-                            message: 'Попробуйте скопировать результат вручную.\n\nТекст уже в буфере обмена — вставьте в чат (долгое нажатие → Вставить).',
-                            buttons: [{type: 'ok'}]
-                        });
-                        navigator.clipboard.writeText(currentResultText).catch(() => {});
-                    }
-                }, 1500);
-            });
+// ─── Калькулятор ────────────────────────────────────────────────────
+const valid = new Set(['а1','а3','а5','б1','б3','б5','с1','с3','с5','е1','е3','е5','ш1','ш3','ш5','н1','н3','н5']);
 
-            // Если бот отправит ответ — можно отловить, но обычно не нужно
-            tg.onEvent('popup_closed', () => { sendSuccessShown = true; });
-        }
+function selectMode(mode) {
+  currentCategory = mode === 'НН' ? 'Ненаходы' : 'Перезаклады';
+  document.getElementById('prompt-text').innerHTML = `Введите значения для <b>${mode}</b> через пробел`;
+  document.getElementById('input-area').style.display = 'block';
+  document.getElementById('result').style.display = 'none';
+  if (tg) tg.SecondaryButton.hide();
+  document.getElementById('values-input').focus();
+}
 
-        const validValues = ['а1','а3','а5','б1','б3','б5','с1','с3','с5','е1','е3','е5','ш1','ш3','ш5','н1','н3','н5'];
+function processValues() {
+  const input = document.getElementById('values-input').value.trim();
+  if (!input) return alert('Введите хотя бы одно значение');
 
-        function selectMode(mode) {
-            currentCategory = mode === 'НН' ? 'Ненаходы' : 'Перезаклады';
-            document.getElementById('prompt-text').innerHTML = `🔽 Отправь значения для <strong>${mode}</strong> через пробел 🔽`;
-            document.getElementById('input-area').style.display = 'block';
-            document.getElementById('result').innerHTML = '';
-            if (tg) tg.SecondaryButton.hide();
-            document.getElementById('values-input').focus();
-        }
+  const values = input.toLowerCase().split(/\s+/).filter(Boolean);
+  const invalid = values.filter(v => !valid.has(v));
 
-        function processValues() {
-            const input = document.getElementById('values-input').value.trim();
-            if (!input) return alert('Введите значения!');
+  if (invalid.length) {
+    return alert(`Недопустимые значения: ${invalid.join(', ')}`);
+  }
 
-            let values = input.toLowerCase().split(/\s+/).filter(v => v);
-            const invalid = values.filter(v => !validValues.includes(v));
-            if (invalid.length) return alert(`❌ Ошибка: ${invalid.join(', ')}`);
+  const count = {};
+  values.forEach(v => count[v] = (count[v] || 0) + 1);
 
-            const countDict = {};
-            values.forEach(v => countDict[v] = (countDict[v] || 0) + 1);
+  const total = values.length;
 
-            const total = values.length;
+  const fmt = k => `${count[k]||0}`;
+  const capa     = `0.3-${fmt('с3')}/0.5-${fmt('с5')}/1.0-${fmt('с1')}`;
+  const almata   = `0.3-${fmt('а3')}/0.5-${fmt('а5')}/1.0-${fmt('а1')}`;
+  const baik     = `0.3-${fmt('б3')}/0.5-${fmt('б5')}/1.0-${fmt('б1')}`;
+  const esil     = `0.3-${fmt('е3')}/0.5-${fmt('е5')}/1.0-${fmt('е1')}`;
+  const sarayshik= `0.3-${fmt('ш3')}/0.5-${fmt('ш5')}/1.0-${fmt('ш1')}`;
+  const nura     = `0.3-${fmt('н3')}/0.5-${fmt('н5')}/1.0-${fmt('н1')}`;
 
-            const capa      = `0.3-${countDict['с3']||0}/0.5-${countDict['с5']||0}/1.0-${countDict['с1']||0}`;
-            const almata    = `0.3-${countDict['а3']||0}/0.5-${countDict['а5']||0}/1.0-${countDict['а1']||0}`;
-            const baik      = `0.3-${countDict['б3']||0}/0.5-${countDict['б5']||0}/1.0-${countDict['б1']||0}`;
-            const esil      = `0.3-${countDict['е3']||0}/0.5-${countDict['е5']||0}/1.0-${countDict['е1']||0}`;
-            const sarayshik = `0.3-${countDict['ш3']||0}/0.5-${countDict['ш5']||0}/1.0-${countDict['ш1']||0}`;
-            const nura      = `0.3-${countDict['н3']||0}/0.5-${countDict['н5']||0}/1.0-${countDict['н1']||0}`;
+  const s03 = ['а3','б3','с3','е3','ш3','н3'].reduce((a,k)=>a+(count[k]||0),0);
+  const s05 = ['а5','б5','с5','е5','ш5','н5'].reduce((a,k)=>a+(count[k]||0),0);
+  const s10 = ['а1','б1','с1','е1','ш1','н1'].reduce((a,k)=>a+(count[k]||0),0);
 
-            const sum03 = ['а3','б3','с3','е3','ш3','н3'].reduce((a,v)=>a+(countDict[v]||0),0);
-            const sum05 = ['а5','б5','с5','е5','ш5','н5'].reduce((a,v)=>a+(countDict[v]||0),0);
-            const sum10 = ['а1','б1','с1','е1','ш1','н1'].reduce((a,v)=>a+(countDict[v]||0),0);
+  const html = `
+    <h4 class="mb-3 text-center">${currentCategory}: <strong>${total}</strong></h4>
+    <p><b>Capa:</b> ${capa}</p>
+    <p><b>Алмата:</b> ${almata}</p>
+    <p><b>Байк:</b> ${baik}</p>
+    <p><b>Есиль:</b> ${esil}</p>
+    <p><b>Сарайшик:</b> ${sarayshik}</p>
+    <p><b>Нура:</b> ${nura}</p>
+    <hr>
+    <p class="mb-1"><b>0.3:</b> ${s03}</p>
+    <p class="mb-1"><b>0.5:</b> ${s05}</p>
+    <p><b>1.0:</b> ${s10}</p>
+  `;
 
-            const html = `
-                <h4 class="mb-3">${currentCategory}: <strong>${total}</strong></h4>
-                <p><strong>Capa:</strong> ${capa}</p>
-                <p><strong>Алмата:</strong> ${almata}</p>
-                <p><strong>Байк:</strong> ${baik}</p>
-                <p><strong>Есиль:</strong> ${esil}</p>
-                <p><strong>Сарайшик:</strong> ${sarayshik}</p>
-                <p><strong>Нура:</strong> ${nura}</p>
-                <hr>
-                <p><strong>0.3:</strong> ${sum03}</p>
-                <p><strong>0.5:</strong> ${sum05}</p>
-                <p><strong>1.0:</strong> ${sum10}</p>
-            `;
+  const result = document.getElementById('result');
+  result.innerHTML = html;
+  result.style.display = 'block';
 
-            document.getElementById('result').innerHTML = html;
+  currentResultText = `${currentCategory}: ${total}
+Capa:     ${capa}
+Алмата:   ${almata}
+Байк:     ${baik}
+Есиль:    ${esil}
+Сарайшик: ${sarayshik}
+Нура:     ${nura}
+0.3: ${s03}
+0.5: ${s05}
+1.0: ${s10}`;
 
-            currentResultText = `${currentCategory}: ${total}\nCapa: ${capa}\nАлмата: ${almata}\nБайк: ${baik}\nЕсиль: ${esil}\nСарайшик: ${sarayshik}\nНура: ${nura}\n0.3: ${sum03}\n0.5: ${sum05}\n1.0: ${sum10}`;
+  if (tg) {
+    tg.SecondaryButton.show();
+    if (!localStorage.getItem('copyHintShown_v1')) {
+      tg.showAlert('Нажмите кнопку «Скопировать результат» внизу экрана');
+      localStorage.setItem('copyHintShown_v1', 'true');
+    }
+  }
 
-            if (tg) {
-                tg.SecondaryButton.show();
-                if (!localStorage.getItem('sendHintShown')) {
-                    tg.showAlert('Нажмите «Отправить результат в чат» — данные должны появиться в переписке с ботом.\nЕсли ничего не произошло — скопируйте текст вручную.');
-                    localStorage.setItem('sendHintShown', 'true');
-                }
-            }
+  result.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
 
-            document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
-        }
+function resetInput() {
+  document.getElementById('values-input').value = '';
+  document.getElementById('result').style.display = 'none';
+  if (tg) tg.SecondaryButton.hide();
+}
 
-        function resetInput() {
-            document.getElementById('values-input').value = '';
-            document.getElementById('result').innerHTML = '';
-            if (tg) tg.SecondaryButton.hide();
-        }
-
-        function showInfo() {
-            new bootstrap.Modal(document.getElementById('infoModal')).show();
-        }
-    </script>
+function showInfo() {
+  new bootstrap.Modal(document.getElementById('infoModal')).show();
+}
+</script>
 </body>
 </html>
