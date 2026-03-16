@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>НН / ПЗ Калькулятор</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { transition: background-color 0.3s, color 0.3s; }
+        .result { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .btn-custom { font-size: 1.1rem; padding: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container py-4">
+        <div class="text-center mb-4">
+            <h1 id="app-title" class="display-6">👋 НН / ПЗ Калькулятор</h1>
+            <p class="text-muted">Обработка значений Ненаходы и Перезаклады</p>
+        </div>
+
+        <div class="d-flex justify-content-center gap-2 mb-4 flex-wrap">
+            <button onclick="selectMode('НН')" class="btn btn-success btn-custom">✅НН✅</button>
+            <button onclick="selectMode('ПЗ')" class="btn btn-primary btn-custom">✅ПЗ✅</button>
+            <button onclick="showInfo()" class="btn btn-info btn-custom text-white">❓ИНФО❓</button>
+        </div>
+
+        <div id="input-area" class="card p-4 mb-4" style="display: none;">
+            <h5 id="prompt-text" class="text-center"></h5>
+            <textarea id="values-input" class="form-control mb-3" rows="4" placeholder="а1 б5 с3 е1 ш5 н3 ..."></textarea>
+            <button onclick="processValues()" class="btn btn-lg btn-dark w-100">Обработать</button>
+            <button onclick="resetInput()" class="btn btn-outline-secondary w-100 mt-2">Очистить</button>
+        </div>
+
+        <div id="result" class="result mt-4"></div>
+    </div>
+
+    <!-- Модальное окно ИНФО -->
+    <div class="modal fade" id="infoModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Информация</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    1️⃣ Только значения а/б/с/е/ш/н + 1/3/5<br>
+                    2️⃣ Заглавные буквы преобразуются автоматически<br>
+                    3️⃣ Ввод через пробел<br>
+                    4️⃣ Результат можно отправить прямо в чат с ботом
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // ===================== TELEGRAM MINI APP =====================
+        let tg = window.Telegram ? window.Telegram.WebApp : null;
+        let currentCategory = '';
+        let currentResultText = '';
+
+        if (tg) {
+            tg.ready();
+            tg.expand();
+
+            // Тема Telegram
+            document.body.style.backgroundColor = tg.backgroundColor || '#f8f9fa';
+            document.body.style.color = tg.textColor || '#222222';
+
+            // Имя пользователя
+            if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                const name = tg.initDataUnsafe.user.first_name;
+                document.getElementById('app-title').textContent = `👋 ${name}, НН / ПЗ Калькулятор`;
+            }
+
+            // Управление MainButton
+            function updateMainButton(isResult = false, resultText = '') {
+                if (!tg) return;
+                if (isResult && resultText) {
+                    currentResultText = resultText;
+                    tg.MainButton.setText('Отправить результат в чат');
+                    tg.MainButton.onClick(() => {
+                        tg.sendData(currentResultText);
+                        // tg.close(); // раскомментируй, если хочешь авто-закрытие
+                    });
+                } else {
+                    tg.MainButton.setText('Закрыть приложение');
+                    tg.MainButton.onClick(() => tg.close());
+                }
+                tg.MainButton.show();
+            }
+            updateMainButton(false); // начальное состояние
+        }
+
+        // ===================== ЛОГИКА КАЛЬКУЛЯТОРА =====================
+        const validValues = ['а1','а3','а5','б1','б3','б5','с1','с3','с5','е1','е3','е5','ш1','ш3','ш5','н1','н3','н5'];
+
+        function selectMode(mode) {
+            currentCategory = mode === 'НН' ? 'Ненаходы' : 'Перезаклады';
+            document.getElementById('prompt-text').innerHTML = `🔽 Отправь значения для <strong>${mode}</strong> через пробел 🔽`;
+            document.getElementById('input-area').style.display = 'block';
+            document.getElementById('result').innerHTML = '';
+            if (tg) updateMainButton(false);
+            document.getElementById('values-input').focus();
+        }
+
+        function processValues() {
+            const input = document.getElementById('values-input').value.trim();
+            if (!input) return alert('Введите значения!');
+
+            let values = input.toLowerCase().split(/\s+/).filter(v => v);
+            const invalid = values.filter(v => !validValues.includes(v));
+
+            if (invalid.length) {
+                return alert(`❌ Ошибка: ${invalid.join(', ')}`);
+            }
+
+            const countDict = {};
+            values.forEach(v => countDict[v] = (countDict[v] || 0) + 1);
+
+            const total = values.length;
+
+            const capa     = `0.3-${countDict['с3']||0}/0.5-${countDict['с5']||0}/1.0-${countDict['с1']||0}`;
+            const almata   = `0.3-${countDict['а3']||0}/0.5-${countDict['а5']||0}/1.0-${countDict['а1']||0}`;
+            const baik     = `0.3-${countDict['б3']||0}/0.5-${countDict['б5']||0}/1.0-${countDict['б1']||0}`;
+            const esil     = `0.3-${countDict['е3']||0}/0.5-${countDict['е5']||0}/1.0-${countDict['е1']||0}`;
+            const sarayshik= `0.3-${countDict['ш3']||0}/0.5-${countDict['ш5']||0}/1.0-${countDict['ш1']||0}`;
+            const nura     = `0.3-${countDict['н3']||0}/0.5-${countDict['н5']||0}/1.0-${countDict['н1']||0}`;
+
+            const sum03 = ['а3','б3','с3','е3','ш3','н3'].reduce((a,v)=>a+(countDict[v]||0),0);
+            const sum05 = ['а5','б5','с5','е5','ш5','н5'].reduce((a,v)=>a+(countDict[v]||0),0);
+            const sum10 = ['а1','б1','с1','е1','ш1','н1'].reduce((a,v)=>a+(countDict[v]||0),0);
+
+            // HTML для экрана
+            const html = `
+                <h4 class="mb-3">${currentCategory}: <strong>${total}</strong></h4>
+                <p><strong>Capa:</strong> ${capa}</p>
+                <p><strong>Алмата:</strong> ${almata}</p>
+                <p><strong>Байк:</strong> ${baik}</p>
+                <p><strong>Есиль:</strong> ${esil}</p>
+                <p><strong>Сарайшик:</strong> ${sarayshik}</p>
+                <p><strong>Нура:</strong> ${nura}</p>
+                <hr>
+                <p><strong>0.3:</strong> ${sum03}</p>
+                <p><strong>0.5:</strong> ${sum05}</p>
+                <p><strong>1.0:</strong> ${sum10}</p>
+            `;
+            document.getElementById('result').innerHTML = html;
+
+            // Текст для отправки в чат
+            const resultText = `${currentCategory}: ${total}\n` +
+                `Capa: ${capa}\nАлмата: ${almata}\nБайк: ${baik}\n` +
+                `Есиль: ${esil}\nСарайшик: ${sarayshik}\nНура: ${nura}\n` +
+                `0.3: ${sum03}\n0.5: ${sum05}\n1.0: ${sum10}`;
+
+            if (tg) updateMainButton(true, resultText);
+            document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function resetInput() {
+            document.getElementById('values-input').value = '';
+            document.getElementById('result').innerHTML = '';
+            if (tg) updateMainButton(false);
+        }
+
+        function showInfo() {
+            new bootstrap.Modal(document.getElementById('infoModal')).show();
+        }
+    </script>
+</body>
+</html>
