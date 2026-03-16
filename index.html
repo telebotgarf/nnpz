@@ -19,7 +19,7 @@
       color: var(--tg-text);
       transition: background-color 0.4s, color 0.4s;
       min-height: 100vh;
-      padding-bottom: 80px; /* место под кнопки Telegram */
+      padding-bottom: 100px;
     }
 
     .container { max-width: 540px; }
@@ -61,26 +61,21 @@
       padding: 0.75rem 1.25rem;
     }
 
-    /* Адаптация модального окна под тему Telegram */
+    /* Модальное окно под тёмную/светлую тему */
     .modal-content {
-      background-color: var(--tg-section, #1e1e1e) !important;
+      background-color: var(--tg-section, #121212) !important;
       color: var(--tg-text, #e9ecef) !important;
       border: 1px solid var(--tg-hint, #444) !important;
       border-radius: 16px;
     }
 
     .modal-header, .modal-footer {
-      background-color: var(--tg-section, #1e1e1e) !important;
+      background-color: var(--tg-section, #121212) !important;
       border-color: var(--tg-hint, #444) !important;
     }
 
-    .modal-title {
+    .modal-title, .modal-body {
       color: var(--tg-text, #ffffff) !important;
-    }
-
-    .modal-body {
-      color: var(--tg-text, #e9ecef) !important;
-      line-height: 1.6;
     }
 
     .btn-close {
@@ -95,24 +90,24 @@
 </head>
 <body>
 
-<div class="container py-4">
+<div class="container py-5">
 
   <div class="text-center mb-5">
     <h1 id="app-title" class="display-5 fw-bold">НН / ПЗ Калькулятор</h1>
-    <p class="text-muted lead">Подсчёт значений Ненаходы и Перезаклады</p>
+    <p class="text-muted lead">Подсчёт Ненаходов и Перезакладов</p>
   </div>
 
-  <div class="d-grid d-sm-flex justify-content-center gap-3 mb-4">
+  <div class="d-grid d-sm-flex justify-content-center gap-3 mb-5">
     <button onclick="selectMode('НН')" class="btn btn-success btn-lg btn-custom">✅ НН ✅</button>
     <button onclick="selectMode('ПЗ')" class="btn btn-primary btn-lg btn-custom">✅ ПЗ ✅</button>
     <button onclick="showInfo()" class="btn btn-info btn-lg btn-custom text-white">❓ ИНФО ❓</button>
   </div>
 
   <div id="input-area" class="card p-4 mb-4 shadow-sm" style="display:none;">
-    <h5 id="prompt-text" class="text-center mb-3 fw-semibold"></h5>
+    <h5 id="prompt-text" class="text-center mb-4 fw-semibold"></h5>
     <textarea id="values-input" class="form-control mb-3" rows="4" placeholder="а1 б5 с3 е1 ш5 н3 …" autofocus></textarea>
     <div class="d-grid gap-2">
-      <button onclick="processValues()" class="btn btn-dark btn-lg">Обработать</button>
+      <button onclick="processValues()" class="btn btn-dark btn-lg">Рассчитать</button>
       <button onclick="resetInput()" class="btn btn-outline-secondary">Очистить</button>
     </div>
   </div>
@@ -130,11 +125,11 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
       </div>
       <div class="modal-body">
-        <ol class="mb-0">
-          <li>Допустимые значения: <code>а1 а3 а5 б1 б3 б5 с1 с3 с5 е1 е3 е5 ш1 ш3 ш5 н1 н3 н5</code></li>
-          <li>Заглавные буквы автоматически преобразуются в строчные</li>
+        <ol class="mb-0 ps-3">
+          <li>Допустимые значения: а1 а3 а5 б1 б3 б5 с1 с3 с5 е1 е3 е5 ш1 ш3 ш5 н1 н3 н5</li>
+          <li>Заглавные буквы автоматически становятся строчными</li>
           <li>Значения вводятся через пробел</li>
-          <li>После расчёта нажмите кнопку «Скопировать результат» → вернитесь в чат и вставьте текст (долгое нажатие → Вставить)</li>
+          <li>После расчёта нажмите «Скопировать результат» → вернитесь в чат и вставьте (долгое нажатие → Вставить)</li>
         </ol>
       </div>
       <div class="modal-footer">
@@ -151,9 +146,8 @@ const tg = window.Telegram?.WebApp || null;
 let currentCategory = '';
 let currentResultText = '';
 
-// ─── Telegram Mini App init ────────────────────────────────────────
+// ─── Инициализация Telegram Mini App ───────────────────────────────
 if (tg) {
-  tg.MainButton.hide();
   tg.ready();
   tg.expand();
 
@@ -172,12 +166,10 @@ if (tg) {
       `Привет, ${tg.initDataUnsafe.user.first_name}!`;
   }
 
-  // Главная кнопка — закрытие
-  tg.MainButton.setText('Закрыть');
-  tg.MainButton.onClick(() => tg.close());
-  tg.MainButton.show();
+  // Скрываем кнопку «Закрыть»
+  tg.MainButton.hide();
 
-  // Вторая кнопка — копирование
+  // Кнопка копирования результата
   tg.SecondaryButton.setText('Скопировать результат');
   tg.SecondaryButton.hide();
   tg.SecondaryButton.onClick(async () => {
@@ -186,17 +178,17 @@ if (tg) {
     try {
       await navigator.clipboard.writeText(currentResultText);
       tg.showPopup({
-        title: 'Скопировано!',
-        message: 'Результат в буфере обмена.\n\nВернитесь в чат и вставьте текст.',
+        title: 'Готово',
+        message: 'Результат скопирован в буфер обмена.\nВставьте его в чат с ботом.',
         buttons: [{type:'ok'}]
       });
-    } catch (err) {
-      tg.showAlert('Не удалось скопировать автоматически.\nВыделите текст на экране вручную.');
+    } catch {
+      tg.showAlert('Не удалось скопировать автоматически.\nВыделите и скопируйте текст вручную.');
     }
   });
 }
 
-// ─── Калькулятор ────────────────────────────────────────────────────
+// ─── Логика калькулятора ────────────────────────────────────────────
 const valid = new Set(['а1','а3','а5','б1','б3','б5','с1','с3','с5','е1','е3','е5','ш1','ш3','ш5','н1','н3','н5']);
 
 function selectMode(mode) {
@@ -224,7 +216,7 @@ function processValues() {
 
   const total = values.length;
 
-  const fmt = k => `${count[k]||0}`;
+  const fmt = k => count[k] || 0;
   const capa     = `0.3-${fmt('с3')}/0.5-${fmt('с5')}/1.0-${fmt('с1')}`;
   const almata   = `0.3-${fmt('а3')}/0.5-${fmt('а5')}/1.0-${fmt('а1')}`;
   const baik     = `0.3-${fmt('б3')}/0.5-${fmt('б5')}/1.0-${fmt('б1')}`;
@@ -232,22 +224,26 @@ function processValues() {
   const sarayshik= `0.3-${fmt('ш3')}/0.5-${fmt('ш5')}/1.0-${fmt('ш1')}`;
   const nura     = `0.3-${fmt('н3')}/0.5-${fmt('н5')}/1.0-${fmt('н1')}`;
 
-  const s03 = ['а3','б3','с3','е3','ш3','н3'].reduce((a,k)=>a+(count[k]||0),0);
-  const s05 = ['а5','б5','с5','е5','ш5','н5'].reduce((a,k)=>a+(count[k]||0),0);
-  const s10 = ['а1','б1','с1','е1','ш1','н1'].reduce((a,k)=>a+(count[k]||0),0);
+  const s03 = ['а3','б3','с3','е3','ш3','н3'].reduce((a,k)=>a+fmt(k),0);
+  const s05 = ['а5','б5','с5','е5','ш5','н5'].reduce((a,k)=>a+fmt(k),0);
+  const s10 = ['а1','б1','с1','е1','ш1','н1'].reduce((a,k)=>a+fmt(k),0);
 
   const html = `
-    <h4 class="mb-3 text-center">${currentCategory}: <strong>${total}</strong></h4>
-    <p><b>Capa:</b> ${capa}</p>
-    <p><b>Алмата:</b> ${almata}</p>
-    <p><b>Байк:</b> ${baik}</p>
-    <p><b>Есиль:</b> ${esil}</p>
-    <p><b>Сарайшик:</b> ${sarayshik}</p>
-    <p><b>Нура:</b> ${nura}</p>
-    <hr>
-    <p class="mb-1"><b>0.3:</b> ${s03}</p>
-    <p class="mb-1"><b>0.5:</b> ${s05}</p>
-    <p><b>1.0:</b> ${s10}</p>
+    <h4 class="mb-4 text-center">${currentCategory}: <strong>${total}</strong></h4>
+    <div class="row g-3">
+      <div class="col-6"><b>Capa:</b> ${capa}</div>
+      <div class="col-6"><b>Алмата:</b> ${almata}</div>
+      <div class="col-6"><b>Байк:</b> ${baik}</div>
+      <div class="col-6"><b>Есиль:</b> ${esil}</div>
+      <div class="col-6"><b>Сарайшик:</b> ${sarayshik}</div>
+      <div class="col-6"><b>Нура:</b> ${nura}</div>
+    </div>
+    <hr class="my-4">
+    <div class="row g-3 text-center">
+      <div class="col-4"><b>0.3</b><br>${s03}</div>
+      <div class="col-4"><b>0.5</b><br>${s05}</div>
+      <div class="col-4"><b>1.0</b><br>${s10}</div>
+    </div>
   `;
 
   const result = document.getElementById('result');
@@ -267,9 +263,9 @@ Capa:     ${capa}
 
   if (tg) {
     tg.SecondaryButton.show();
-    if (!localStorage.getItem('copyHintShown_v1')) {
-      tg.showAlert('Нажмите кнопку «Скопировать результат» внизу экрана');
-      localStorage.setItem('copyHintShown_v1', 'true');
+    if (!localStorage.getItem('copyHint_v2')) {
+      tg.showAlert('Нажмите «Скопировать результат» внизу экрана');
+      localStorage.setItem('copyHint_v2', 'true');
     }
   }
 
