@@ -6,8 +6,30 @@
     <title>НН / ПЗ Калькулятор</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { transition: background-color 0.3s, color 0.3s; }
-        .result { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        body {
+            transition: background-color 0.3s, color 0.3s;
+            min-height: 100vh;
+        }
+        .container { max-width: 540px; }
+        .result {
+            background: var(--tg-theme-section-bg-color, white);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            color: var(--tg-theme-text-color, #222);
+        }
+        .card { 
+            background: var(--tg-theme-section-bg-color, #fff);
+            color: var(--tg-theme-text-color, #222);
+        }
+        .form-control {
+            background: var(--tg-theme-bg-color, #fff);
+            color: var(--tg-theme-text-color, #222);
+            border-color: var(--tg-theme-hint-color, #ccc);
+        }
+        .form-control::placeholder { color: var(--tg-theme-hint-color, #aaa); }
+        .text-muted { color: var(--tg-theme-hint-color, #6c757d) !important; }
+        h1, h4, h5 { color: var(--tg-theme-text-color, #222) !important; }
         .btn-custom { font-size: 1.1rem; padding: 12px; }
     </style>
 </head>
@@ -43,10 +65,10 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    1️⃣ Только значения а/б/с/е/ш/н + 1/3/5<br>
-                    2️⃣ Заглавные буквы преобразуются автоматически<br>
-                    3️⃣ Ввод через пробел<br>
-                    4️⃣ Результат можно отправить прямо в чат с ботом
+                    1️⃣ Только а/б/с/е/ш/н + 1/3/5<br>
+                    2️⃣ Заглавные → строчные автоматически<br>
+                    3️⃣ Через пробел<br>
+                    4️⃣ Результат можно отправить в чат кнопкой снизу
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
@@ -58,8 +80,10 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // ===================== TELEGRAM MINI APP =====================
-        let tg = window.Telegram ? window.Telegram.WebApp : null;
+        // ────────────────────────────────────────────────
+        // TELEGRAM MINI APP ИНИЦИАЛИЗАЦИЯ
+        // ────────────────────────────────────────────────
+        const tg = window.Telegram?.WebApp;
         let currentCategory = '';
         let currentResultText = '';
 
@@ -67,36 +91,40 @@
             tg.ready();
             tg.expand();
 
-            // Тема Telegram
-            document.body.style.backgroundColor = tg.backgroundColor || '#f8f9fa';
-            document.body.style.color = tg.textColor || '#222222';
+            // Применяем цвета из themeParams (очень важно для читаемости в тёмной теме)
+            const theme = tg.themeParams;
+            document.documentElement.style.setProperty('--tg-theme-bg-color', theme.bg_color || '#f0f0f0');
+            document.documentElement.style.setProperty('--tg-theme-text-color', theme.text_color || '#222222');
+            document.documentElement.style.setProperty('--tg-theme-hint-color', theme.hint_color || '#999999');
+            document.documentElement.style.setProperty('--tg-theme-section-bg-color', theme.section_bg_color || '#ffffff');
+            document.body.style.backgroundColor = theme.bg_color || '#f8f9fa';
+            document.body.style.color = theme.text_color || '#222';
 
             // Имя пользователя
-            if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-                const name = tg.initDataUnsafe.user.first_name;
-                document.getElementById('app-title').textContent = `👋 ${name}, НН / ПЗ Калькулятор`;
+            if (tg.initDataUnsafe?.user?.first_name) {
+                document.getElementById('app-title').textContent = 
+                    `👋 ${tg.initDataUnsafe.user.first_name}, НН / ПЗ Калькулятор`;
             }
 
-            // Управление MainButton
-            function updateMainButton(isResult = false, resultText = '') {
-                if (!tg) return;
-                if (isResult && resultText) {
-                    currentResultText = resultText;
-                    tg.MainButton.setText('Отправить результат в чат');
-                    tg.MainButton.onClick(() => {
-                        tg.sendData(currentResultText);
-                        // tg.close(); // раскомментируй, если хочешь авто-закрытие
-                    });
-                } else {
-                    tg.MainButton.setText('Закрыть приложение');
-                    tg.MainButton.onClick(() => tg.close());
+            // Основная кнопка — всегда "Закрыть"
+            tg.MainButton.setText('Закрыть приложение');
+            tg.MainButton.onClick(() => tg.close());
+            tg.MainButton.show();
+
+            // Вторая кнопка — для отправки результата (появляется после расчёта)
+            tg.SecondaryButton.setText('Отправить результат в чат');
+            tg.SecondaryButton.hide();  // скрыта по умолчанию
+            tg.SecondaryButton.onClick(() => {
+                if (currentResultText) {
+                    tg.sendData(currentResultText);
+                    // tg.close();  // можно раскомментировать — закроет после отправки
                 }
-                tg.MainButton.show();
-            }
-            updateMainButton(false); // начальное состояние
+            });
         }
 
-        // ===================== ЛОГИКА КАЛЬКУЛЯТОРА =====================
+        // ────────────────────────────────────────────────
+        // ЛОГИКА КАЛЬКУЛЯТОРА (без изменений, только адаптация)
+        // ────────────────────────────────────────────────
         const validValues = ['а1','а3','а5','б1','б3','б5','с1','с3','с5','е1','е3','е5','ш1','ш3','ш5','н1','н3','н5'];
 
         function selectMode(mode) {
@@ -104,7 +132,7 @@
             document.getElementById('prompt-text').innerHTML = `🔽 Отправь значения для <strong>${mode}</strong> через пробел 🔽`;
             document.getElementById('input-area').style.display = 'block';
             document.getElementById('result').innerHTML = '';
-            if (tg) updateMainButton(false);
+            if (tg) tg.SecondaryButton.hide();
             document.getElementById('values-input').focus();
         }
 
@@ -115,27 +143,24 @@
             let values = input.toLowerCase().split(/\s+/).filter(v => v);
             const invalid = values.filter(v => !validValues.includes(v));
 
-            if (invalid.length) {
-                return alert(`❌ Ошибка: ${invalid.join(', ')}`);
-            }
+            if (invalid.length) return alert(`❌ Ошибка: ${invalid.join(', ')}`);
 
             const countDict = {};
             values.forEach(v => countDict[v] = (countDict[v] || 0) + 1);
 
             const total = values.length;
 
-            const capa     = `0.3-${countDict['с3']||0}/0.5-${countDict['с5']||0}/1.0-${countDict['с1']||0}`;
-            const almata   = `0.3-${countDict['а3']||0}/0.5-${countDict['а5']||0}/1.0-${countDict['а1']||0}`;
-            const baik     = `0.3-${countDict['б3']||0}/0.5-${countDict['б5']||0}/1.0-${countDict['б1']||0}`;
-            const esil     = `0.3-${countDict['е3']||0}/0.5-${countDict['е5']||0}/1.0-${countDict['е1']||0}`;
-            const sarayshik= `0.3-${countDict['ш3']||0}/0.5-${countDict['ш5']||0}/1.0-${countDict['ш1']||0}`;
-            const nura     = `0.3-${countDict['н3']||0}/0.5-${countDict['н5']||0}/1.0-${countDict['н1']||0}`;
+            const capa      = `0.3-${countDict['с3']||0}/0.5-${countDict['с5']||0}/1.0-${countDict['с1']||0}`;
+            const almata    = `0.3-${countDict['а3']||0}/0.5-${countDict['а5']||0}/1.0-${countDict['а1']||0}`;
+            const baik      = `0.3-${countDict['б3']||0}/0.5-${countDict['б5']||0}/1.0-${countDict['б1']||0}`;
+            const esil      = `0.3-${countDict['е3']||0}/0.5-${countDict['е5']||0}/1.0-${countDict['е1']||0}`;
+            const sarayshik = `0.3-${countDict['ш3']||0}/0.5-${countDict['ш5']||0}/1.0-${countDict['ш1']||0}`;
+            const nura      = `0.3-${countDict['н3']||0}/0.5-${countDict['н5']||0}/1.0-${countDict['н1']||0}`;
 
             const sum03 = ['а3','б3','с3','е3','ш3','н3'].reduce((a,v)=>a+(countDict[v]||0),0);
             const sum05 = ['а5','б5','с5','е5','ш5','н5'].reduce((a,v)=>a+(countDict[v]||0),0);
             const sum10 = ['а1','б1','с1','е1','ш1','н1'].reduce((a,v)=>a+(countDict[v]||0),0);
 
-            // HTML для экрана
             const html = `
                 <h4 class="mb-3">${currentCategory}: <strong>${total}</strong></h4>
                 <p><strong>Capa:</strong> ${capa}</p>
@@ -151,20 +176,16 @@
             `;
             document.getElementById('result').innerHTML = html;
 
-            // Текст для отправки в чат
-            const resultText = `${currentCategory}: ${total}\n` +
-                `Capa: ${capa}\nАлмата: ${almata}\nБайк: ${baik}\n` +
-                `Есиль: ${esil}\nСарайшик: ${sarayshik}\nНура: ${nura}\n` +
-                `0.3: ${sum03}\n0.5: ${sum05}\n1.0: ${sum10}`;
+            currentResultText = `${currentCategory}: ${total}\nCapa: ${capa}\nАлмата: ${almata}\nБайк: ${baik}\nЕсиль: ${esil}\nСарайшик: ${sarayshik}\nНура: ${nura}\n0.3: ${sum03}\n0.5: ${sum05}\n1.0: ${sum10}`;
 
-            if (tg) updateMainButton(true, resultText);
+            if (tg) tg.SecondaryButton.show();
             document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
         }
 
         function resetInput() {
             document.getElementById('values-input').value = '';
             document.getElementById('result').innerHTML = '';
-            if (tg) updateMainButton(false);
+            if (tg) tg.SecondaryButton.hide();
         }
 
         function showInfo() {
