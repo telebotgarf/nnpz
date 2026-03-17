@@ -94,7 +94,7 @@
 
   <div class="text-center mb-5">
     <h1 id="app-title" class="display-5 fw-bold">НН / ПЗ Калькулятор</h1>
-    <p class="text-muted lead">Подсчёт Ненаходов и Перезакладов</p>
+    <p class="text-muted lead">Подсчёт НН и ПЗ</p>
   </div>
 
   <div class="d-grid d-sm-flex justify-content-center gap-3 mb-5">
@@ -179,7 +179,7 @@ if (tg) {
       await navigator.clipboard.writeText(currentResultText);
       tg.showPopup({
         title: 'Готово',
-        message: 'Результат скопирован в буфер обмена.\nВставьте его в чат с ботом.',
+        message: 'Результат скопирован в буфер обмена.\nВставьте его в чат для отчётов.',
         buttons: [{type:'ok'}]
       });
     } catch {
@@ -251,12 +251,12 @@ function processValues() {
   result.style.display = 'block';
 
   currentResultText = `${currentCategory}: ${total}
-Capa:     ${capa}
-Алмата:   ${almata}
-Байк:     ${baik}
-Есиль:    ${esil}
+Capa: ${capa}
+Алмата: ${almata}
+Байк: ${baik}
+Есиль: ${esil}
 Сарайшик: ${sarayshik}
-Нура:     ${nura}
+Нура: ${nura}
 0.3: ${s03}
 0.5: ${s05}
 1.0: ${s10}`;
