@@ -214,15 +214,25 @@ body.ready .wrap>*:nth-child(7){animation-delay:.32s}
 .hist-empty{display:flex;align-items:center;gap:12px;font:700 12.5px/1.45 var(--fb);color:rgba(36,22,9,.6);padding:4px 2px}
 .pooky{width:46px;height:46px;flex:none}
 .hist-list{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 9px;scroll-snap-type:x proximity}
-.hcard{min-width:160px;scroll-snap-align:start;background:var(--paper2);border:2.5px solid var(--ink);
+.hcard{flex:0 0 140px;width:140px;scroll-snap-align:start;background:var(--paper2);border:2.5px solid var(--ink);
   border-radius:12px;box-shadow:3px 3px 0 rgba(36,22,9,.16);padding:10px;display:flex;flex-direction:column;gap:5px}
-.hc-top{display:flex;align-items:center;justify-content:space-between}
+.hcard.bye{animation:hbye .18s forwards}
+@keyframes hbye{to{opacity:0;transform:scale(.82)}}
+.hc-top{display:flex;align-items:center;justify-content:space-between;gap:4px}
 .hc-mode{border:2px solid var(--ink);border-radius:8px;padding:2px 7px;font:800 11px/1.2 var(--fb)}
 .hc-mode.nn{background:var(--orange)}.hc-mode.pz{background:var(--sky)}
 .hc-time{font:800 11px/1 var(--fb);color:rgba(36,22,9,.55)}
 .hc-total{font:900 26px/1 var(--fb)}
-.hc-cat{font:700 11px/1.2 var(--fb);color:rgba(36,22,9,.6)}
-.hc-actions{display:flex;gap:6px;margin-top:4px}
+.hc-cat{font:700 11px/1.2 var(--fb);color:rgba(36,22,9,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hc-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:5px}
+.hbtn{height:32px;border:2px solid var(--ink);border-radius:9px;background:var(--paper);color:var(--ink);
+  box-shadow:2px 2px 0 var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;
+  transition:transform .08s,box-shadow .08s,background .15s;touch-action:manipulation}
+.hbtn:active{transform:translate(1px,1px);box-shadow:1px 1px 0 var(--ink)}
+.hbtn svg{width:16px;height:16px;flex:none}
+.hbtn.copy{background:var(--cheese)}.hbtn.copy:hover{background:#FFD264}
+.hbtn.load{background:var(--sky)}.hbtn.load:hover{background:#4598E8}
+.hbtn.del{background:#FFDCD2;color:var(--tomato)}.hbtn.del:hover{background:#FFC9BC}
 
 /* ── bottom bar ── */
 .bar{position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--paper);border-top:3px solid var(--ink);
@@ -353,6 +363,9 @@ body.ready .wrap>*:nth-child(7){animation-delay:.32s}
 </g>
 <g id="i-clip" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
   <rect x="6.5" y="5" width="11" height="15.5" rx="2"/><path d="M9.5,5 V3.5 h5 V5 M9.5,10.5 h5 M9.5,14 h5 M9.5,17.5 h3"/>
+</g>
+<g id="i-load" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M12,3.5 V13 M8.2,9.6 L12,13.4 L15.8,9.6 M4.5,15.5 v4 h15 v-4"/>
 </g>
 <g id="i-share" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
   <circle cx="6" cy="12" r="2.7"/><circle cx="17.5" cy="5.5" r="2.7"/><circle cx="17.5" cy="18.5" r="2.7"/>
@@ -564,7 +577,7 @@ body.ready .wrap>*:nth-child(7){animation-delay:.32s}
       <div id="valuesGrid" class="vgrid"></div>
       <p>Заглавные становятся строчными. Латиница <b>a, b, c, e, w, h</b> автоматически заменяется на кириллицу (a1→а1, w5→ш5). Разделители: пробел, запятая, точка с запятой, перенос строки. Можно слитно: <b>а1б5с3</b>.</p>
       <h3>📋 Отчёт</h3>
-      <p>Считается сам при каждом изменении. «Скопировать отчёт» → вставь в чат. Кнопка «Поделиться» отправит текст сразу в любой чат без вставки. Последние 6 отчётов хранятся внизу — копируй и загружай снова. ↩ отменяет любое действие (или Ctrl+Z).</p>
+      <p>Считается сам при каждом изменении. «Скопировать отчёт» → вставь в чат. Кнопка «Поделиться» отправит текст сразу в любой чат без вставки. Последние 6 отчётов хранятся внизу: 📋 копирует, ⬇ загружает, ✕ удаляет (удаление можно вернуть). ↩ отменяет любое действие (или Ctrl+Z).</p>
     </div>
     <div class="dlg-foot">
       <button id="helpExample" class="btn cheese" type="button">Показать пример</button>
@@ -818,12 +831,25 @@ function renderHistory(){
     const d=new Date(h.t);
     const hh=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
     const card=document.createElement('div');card.className='hcard';
-    card.innerHTML=`<div class="hc-top"><span class="hc-mode ${h.mode==='НН'?'nn':'pz'}">${h.mode}</span><span class="hc-time">${hh}</span></div><b class="hc-total">${h.total}</b><span class="hc-cat">${h.mode==='НН'?'Ненаходы':'Перезаклады'}</span><div class="hc-actions"><button class="mini-btn cheese hc-copy" type="button">Копировать</button><button class="mini-btn hc-load" type="button">Загрузить</button></div>`;
+    card.innerHTML=`<div class="hc-top"><span class="hc-mode ${h.mode==='НН'?'nn':'pz'}">${h.mode}</span><span class="hc-time">${hh}</span></div><b class="hc-total">${h.total}</b><span class="hc-cat">${h.mode==='НН'?'Ненаходы':'Перезаклады'}</span><div class="hc-actions"><button class="hbtn copy hc-copy" type="button" title="Скопировать отчёт" aria-label="Скопировать отчёт"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-clip"/></svg></button><button class="hbtn load hc-load" type="button" title="Загрузить в калькулятор" aria-label="Загрузить отчёт в калькулятор"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-load"/></svg></button><button class="hbtn del hc-del" type="button" title="Удалить отчёт" aria-label="Удалить отчёт"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-x"/></svg></button></div>`;
     card.querySelector('.hc-copy').addEventListener('click',()=>copyText(h.text,true));
     card.querySelector('.hc-load').addEventListener('click',()=>{
       pushUndo();state.counts={...emptyCounts(),...h.counts};state.mode=h.mode;state.demo=false;fieldDirty=false;
       render();setBubble('load');snd('mode');hap('impact','medium');
       toast('Отчёт загружен','paw',{label:'Вернуть',fn:undo})});
+    card.querySelector('.hc-del').addEventListener('click',()=>{
+      if(card.dataset.bye)return;card.dataset.bye='1';
+      const idx=state.history.indexOf(h);if(idx<0)return;
+      const removed=state.history.splice(idx,1)[0];save();
+      const restore=()=>{
+        if(state.history.includes(removed))return;
+        state.history.splice(Math.min(idx,state.history.length),0,removed);
+        state.history=state.history.slice(0,6);
+        renderHistory();save();snd('undo');hap('impact','light')};
+      card.classList.add('bye');
+      setTimeout(()=>{renderHistory()},180);
+      snd('minus');hap('impact','medium');
+      toast('Отчёт удалён','trash',{label:'Вернуть',fn:restore})});
     list.appendChild(card);
   });
 }
